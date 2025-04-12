@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h3>Тест на знание дат</h3>
+        </div>
+        
+        <div class="card-body">
+            {% if not no_events %}
+            <h4 class="card-title mb-4">{{ question }}</h4>
+            
+            {% if description %}
+            <p class="card-text mb-4">{{ description }}</p>
+            {% endif %}
+            
+            <form method="post" class="needs-validation" novalidate>
+                {% csrf_token %}
+                <input type="hidden" name="question_id" value="{{ question_id }}">
+                
+                <div class="mb-3">
+                    <label for="user_answer" class="form-label">Введите дату события:</label>
+                    <input type="text" 
+                           class="form-control" 
+                           id="user_answer"
+                           name="user_answer"
+                           placeholder="Например: 1945"
+                           value="{% if show_answer %}{{ correct_answer }}{% endif %}"
+                           {% if show_answer %}readonly{% else %}required{% endif %}>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">Проверить</button>
+                <button type="button" id="show-answer-btn" class="btn btn-outline-info">
+                    Показать ответ
+                </button>
+                <a href="{% url 'quiz' %}" class="btn btn-outline-secondary">Новый вопрос</a>
+            </form>
+            
+            {% if show_result %}
+            <div class="mt-4 alert alert-{% if is_correct %}success{% else %}danger{% endif %}">
+                {% if is_correct %}
+                <h5>✅ Правильно!</h5>
+                {% else %}
+                <h5>❌ Неправильно</h5>
+                {% endif %}
+            </div>
+            {% endif %}
+            
+            {% else %}
+            <div class="alert alert-warning">
+                Нет событий для теста. Добавьте события сначала.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const showAnswerBtn = document.getElementById('show-answer-btn');
+        const userAnswerInput = document.getElementById('user_answer');
+        
+        showAnswerBtn.addEventListener('click', function() {
+            // Вставляем правильный ответ в поле ввода
+            userAnswerInput.value = "{{ correct_answer }}";
+        });
+    });
+</script>
+
+{% endblock %}
+

@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>Исторические события</h1>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <form method="get">
+            <div class="input-group">
+                <input type="text" class="form-control" name="q" placeholder="Поиск..." value="{{ request.GET.q }}">
+                <button class="btn btn-outline-secondary" type="submit">Найти</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="mb-3">
+    <a href="{% url 'add_event' %}" class="btn btn-success">Добавить новое событие</a>
+</div>
+
+<div class="list-group">
+    {% for event in events %}
+    <div class="list-group-item">
+        <div class="d-flex w-100 justify-content-between">
+            <h5 class="mb-1">{{ event.date }} - {{ event.title }}</h5>
+            <small class="text-muted">{{ event.get_category_display }}</small>
+        </div>
+
+        <div class="mt-2">
+            <a href="{% url 'edit_event' event.pk %}" class="btn btn-sm btn-outline-primary">Редактировать</a>
+            <a href="{% url 'delete_event' event.pk %}" class="btn btn-sm btn-outline-danger">Удалить</a>
+        </div>
+    </div>
+    {% empty %}
+    <div class="alert alert-info">Событий не найдено.</div>
+    {% endfor %}
+</div>
+{% endblock %}

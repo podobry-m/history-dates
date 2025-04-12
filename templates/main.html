@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="text-center mb-5">
+        <h1 class="mb-3">Исторические Даты</h1>
+        <p class="text-muted">Изучайте историю через интерактивные тесты</p>
+    </div>
+
+    <div class="row">
+        <!-- Карточка 1: Список событий -->
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Список событий</h5>
+                    <p class="card-text">Просмотрите все исторические события</p>
+                    <a href="{% url 'event_list' %}" class="btn btn-primary">Открыть</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Карточка 2: Добавить событие -->
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Добавить событие</h5>
+                    <p class="card-text">Добавьте новое историческое событие</p>
+                    <a href="{% url 'add_event' %}" class="btn btn-success">Добавить</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Карточка 3: Тест на даты -->
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Тест на даты</h5>
+                    <p class="card-text">Угадайте даты исторических событий</p>
+                    <a href="{% url 'quiz' %}" class="btn btn-info">Начать</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Карточка 4: Тест на хронологию -->
+        <div class="col-md-6 col-lg-3 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Тест на хронологию</h5>
+                    <p class="card-text">Расставьте события по порядку</p>
+                    <a href="{% url 'timeline_quiz' %}" class="btn btn-warning">Начать</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,200 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h3>Тест на хронологию</h3>
+            <p class="mb-0">Расставьте события в правильном порядке</p>
+        </div>
+        
+        <div class="card-body">
+            {% if not no_events %}
+            <div id="timeline-container" class="list-group mb-4">
+                {% for event in events %}
+                <div class="list-group-item timeline-event" draggable="true" data-id="{{ event.id }}">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="event-title">{{ event.title }}</span>
+                        <span class="badge bg-primary event-date" style="display:none;">{{ event.date }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="d-flex gap-3">
+                <button id="check-order" class="btn btn-primary">Проверить</button>
+                <button id="show-answer" class="btn btn-outline-info">Показать ответ</button>
+                <a href="{% url 'timeline_quiz' %}" class="btn btn-outline-secondary">Новый набор</a>
+            </div>
+
+            <div id="result-message" class="mt-3"></div>
+            {% else %}
+            <div class="alert alert-warning">
+                Нужно минимум 4 события для теста
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+<!-- Добавляем скрытое поле с CSRF токеном -->
+<input type="hidden" id="csrf-token" value="{{ csrf_token }}">
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const container = document.getElementById('timeline-container');
+    const checkBtn = document.getElementById('check-order');
+    const showAnswerBtn = document.getElementById('show-answer');
+    const resultDiv = document.getElementById('result-message');
+    const csrfToken = "{{ csrf_token }}";
+    
+    let correctOrder = {{ correct_order|safe }};
+    let eventsData = {
+        {% for event in events %}
+        "{{ event.id }}": {
+            "title": "{{ event.title }}",
+            "date": "{{ event.date }}"
+        },
+        {% endfor %}
+    };
+
+    // Показ правильного ответа
+    showAnswerBtn.addEventListener('click', function() {
+        showAnswerBtn.disabled = true;
+        checkBtn.disabled = true;
+        // Очищаем контейнер
+        container.innerHTML = '';
+        
+        // Добавляем события в правильном порядке с датами
+        correctOrder.forEach(id => {
+            const event = eventsData[id];
+            const eventElement = document.createElement('div');
+            eventElement.className = 'list-group-item';
+            eventElement.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center">
+                    <span>${event.title}</span>
+                    <span class="badge bg-primary">${event.date}</span>
+                </div>
+            `;
+            container.appendChild(eventElement);
+        });
+        
+        resultDiv.innerHTML = `
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i> Правильный порядок событий
+            </div>
+        `;
+    });
+});
+document.addEventListener('DOMContentLoaded', function() {
+    const container = document.getElementById('timeline-container');
+    const checkBtn = document.getElementById('check-order');
+    const showAnswerBtn = document.getElementById('show-answer');
+    const resultDiv = document.getElementById('result-message');
+    const csrfToken = document.getElementById('csrf-token').value;
+    
+    let draggedItem = null;
+
+    // Drag-and-Drop логика
+    function setupDragAndDrop() {
+        container.querySelectorAll('.timeline-event').forEach(item => {
+            item.addEventListener('dragstart', function() {
+                draggedItem = this;
+                setTimeout(() => this.classList.add('dragging'), 0);
+            });
+
+            item.addEventListener('dragend', function() {
+                this.classList.remove('dragging');
+            });
+        });
+
+        container.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            const afterElement = getDragAfterElement(container, e.clientY);
+            
+            if (afterElement) {
+                container.insertBefore(draggedItem, afterElement);
+            } else {
+                container.appendChild(draggedItem);
+            }
+        });
+    }
+
+    // Проверка порядка
+    checkBtn.addEventListener('click', function() {
+        this.disabled = true;
+
+        const userOrder = Array.from(container.querySelectorAll('.timeline-event'))
+            .map(item => item.dataset.id);
+        
+        fetch("{% url 'check_timeline_order' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({ order: userOrder })
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Ошибка сети');
+            return response.json();
+        })
+        .then(data => {
+            if (data.correct) {
+                // Показываем даты
+                this.disabled=true;
+                showAnswerBtn.disabled=true;
+                document.querySelectorAll('.event-date').forEach(el => {
+                    el.style.display = 'block';
+                });
+                showResult('success', 'Верно!');
+            } else {
+                showResult('danger', 'Неверно, попробуйте ещё');
+                this.disabled=false
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showResult('warning', 'Ошибка сервера');
+            this.disabled=false
+        });
+    });
+
+    // Вспомогательные функции
+    function getDragAfterElement(container, y) {
+        const elements = [...container.querySelectorAll('.timeline-event:not(.dragging)')];
+        return elements.reduce((closest, child) => {
+            const box = child.getBoundingClientRect();
+            const offset = y - box.top - box.height / 2;
+            return (offset < 0 && offset > closest.offset) ? 
+                   { offset: offset, element: child } : closest;
+        }, { offset: Number.NEGATIVE_INFINITY }).element;
+    }
+
+    function showResult(type, message) {
+        resultDiv.innerHTML = `
+            <div class="alert alert-${type}">
+                ${message}
+            </div>
+        `;
+    }
+
+    // Инициализация
+    setupDragAndDrop();
+});
+</script>
+
+
+
+<style>
+    .timeline-event {
+        cursor: grab;
+        transition: transform 0.2s;
+    }
+    .timeline-event.dragging {
+        opacity: 0.7;
+        cursor: grabbing;
+    }
+    .event-date {
+        font-family: monospace;
+    }
+</style>
+{% endblock %}

@@ -1,7 +1,7 @@
 [MASTER]
 load-plugins=pylint_django
 ignore=.venv,venv,env,migrations
-
+django-settings-module=history_dates.settings
 [MESSAGES CONTROL]
 disable=
     C0114,  # missing-module-docstring

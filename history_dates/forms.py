@@ -1,6 +1,6 @@
+from datetime import datetime
 from django import forms
 from .models import HistoricalEvent
-from datetime import datetime
 class HistoricalEventForm(forms.ModelForm):
     class Meta:
         model = HistoricalEvent

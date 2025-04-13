@@ -98,15 +98,12 @@ def timeline_quiz(request):
 
 def check_timeline_order(request):
     if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            user_order = data.get('order', [])
-            correct_order = request.session.get('current_timeline_order', [])
-            is_correct = user_order == correct_order
-            return JsonResponse({
-                'correct': is_correct,
-                'correct_order': correct_order
-            })
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=400)
+        data = json.loads(request.body)
+        user_order = data.get('order', [])
+        correct_order = request.session.get('current_timeline_order', [])
+        is_correct = user_order == correct_order
+        return JsonResponse({
+            'correct': is_correct,
+            'correct_order': correct_order
+        })
     return JsonResponse({'error': 'Invalid request'}, status=400)
